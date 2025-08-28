@@ -1,0 +1,134 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String      @id @default(cuid())
+  email        String      @unique
+  name         String?
+  passwordHash String?
+  createdAt    DateTime    @default(now())
+
+  // Aktif org işaretçisi (UI/guard için)
+  currentOrgId String?
+
+  // Relations
+  profile      Profile?
+  memberships  Membership[]
+  // NextAuth adapter tabloları için ilişkiler:
+  accounts     Account[]
+  sessions     Session[]
+
+  // Audit relation (actor olarak)
+  auditLogs    AuditLog[]  @relation("AuditActor")
+}
+
+model Profile {
+  id        String @id @default(cuid())
+  user      User   @relation(fields: [userId], references: [id])
+  userId    String @unique
+  phone     String?
+  avatarUrl String?
+}
+
+model Organization {
+  id          String        @id @default(cuid())
+  name        String
+  createdAt   DateTime      @default(now())
+  memberships Membership[]
+  // Audit relation
+  auditLogs   AuditLog[]
+}
+
+model Membership {
+  id        String        @id @default(cuid())
+  user      User          @relation(fields: [userId], references: [id])
+  userId    String
+  org       Organization  @relation(fields: [orgId], references: [id])
+  orgId     String
+  role      OrgRole
+  // Guard akışları için basit durum
+  status    String        @default("ACTIVE") // ACTIVE | PENDING
+
+  createdAt DateTime      @default(now())
+
+  @@unique([userId, orgId])
+  @@index([orgId])
+  @@index([userId])
+}
+
+enum OrgRole {
+  OWNER
+  ADMIN
+  MEMBER
+}
+
+// --- NextAuth (Prisma Adapter) standart tabloları ---
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// --- Audit (org-scope + actor ilişkisi) ---
+model AuditLog {
+  id        String   @id @default(cuid())
+
+  orgId     String
+  org       Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+
+  actorId   String?
+  actor     User?   @relation("AuditActor", fields: [actorId], references: [id], onDelete: SetNull)
+
+  action    String
+  resource  String?
+  before    Json?
+  after     Json?
+  ip        String?
+  ua        String?
+  createdAt DateTime @default(now())
+
+  @@index([orgId, createdAt])
+  @@index([resource])
+}
