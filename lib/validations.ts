@@ -1,52 +1,39 @@
-// lib/validations.ts
+// lib/validations.ts - CMS için basitleştirilmiş
 import { z } from 'zod';
 
-// Auth schemas
-export const signupSchema = z.object({
+// İletişim formu şemaları
+export const contactFormSchema = z.object({
+  name: z.string().min(2, "İsim en az 2 karakter olmalıdır"),
   email: z.string().email("Geçerli bir email adresi giriniz"),
-  password: z.string()
-    .min(8, "Şifre en az 8 karakter olmalıdır")
-    .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/, "Şifre en az 1 küçük harf, 1 büyük harf ve 1 rakam içermelidir"),
-  name: z.string().min(1).optional(),
-  orgName: z.string().min(1).optional()
+  phone: z.string().optional(),
+  company: z.string().optional(),
+  service: z.string().min(1, "Hizmet seçimi zorunludur"),
+  subService: z.string().optional(),
+  message: z.string().min(10, "Mesaj en az 10 karakter olmalıdır")
 });
 
-export const loginSchema = z.object({
-  email: z.string().email("Geçerli bir email adresi giriniz"),
-  password: z.string().min(1, "Şifre gereklidir")
+// İçerik yönetimi şemaları
+export const contentSchema = z.object({
+  key: z.string().min(1, "İçerik anahtarı gereklidir"),
+  title: z.string().min(1, "Başlık gereklidir"),
+  content: z.string().min(1, "İçerik gereklidir"),
+  locale: z.string().default("tr"),
+  isActive: z.boolean().default(true)
 });
 
-// User schemas
-export const updateUserSchema = z.object({
-  email: z.string().email().optional(),
-  name: z.string().min(1).nullable().optional(),
-}).strict(); // Sadece tanımlı alanları kabul et
-
-// Organization schemas
-export const createOrgSchema = z.object({
-  name: z.string()
-    .min(1, "Organizasyon adı gereklidir")
-    .max(100, "Organizasyon adı çok uzun")
-    .regex(/^[a-zA-Z0-9\s\-_]+$/, "Organizasyon adı sadece harf, rakam, boşluk, tire ve alt çizgi içerebilir")
+// Dosya yükleme şeması
+export const mediaUploadSchema = z.object({
+  filename: z.string().min(1),
+  originalName: z.string().min(1),
+  mimeType: z.string().min(1),
+  size: z.number().positive(),
+  alt: z.string().optional(),
+  category: z.string().optional()
 });
 
-export const updateOrgSchema = z.object({
-  name: z.string().min(1).max(100).optional(),
-  slug: z.string().regex(/^[a-z0-9-]+$/).optional()
-}).strict();
-
-// Member schemas
-export const inviteMemberSchema = z.object({
-  email: z.string().email("Geçerli bir email adresi giriniz"),
-  role: z.string().refine((val) => ["ADMIN", "MEMBER"].includes(val), {
-    message: "Role ADMIN veya MEMBER olmalıdır"
-  })
-});
-
-export const updateMemberRoleSchema = z.object({
-  role: z.string().refine((val) => ["OWNER", "ADMIN", "MEMBER"].includes(val), {
-    message: "Role OWNER, ADMIN veya MEMBER olmalıdır"
-  })
+// Form durumu güncelleme
+export const updateContactFormStatusSchema = z.object({
+  status: z.enum(["NEW", "REVIEWED", "RESPONDED", "CLOSED"])
 });
 
 // Helper function - validation error'ları format etme

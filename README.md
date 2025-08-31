@@ -1,12 +1,11 @@
-# Auroco Backend - Geliştirme ve İyileştirme Rehberi
+# Auroco CMS - Backend Sistemi
 
 ## 📋 Proje Özeti
 
 **Teknoloji Stack:**
 - **Backend:** Next.js 15.5.0 (App Router)
 - **Database:** PostgreSQL + Prisma ORM
-- **Authentication:** NextAuth v4
-- **Rate Limiting:** Upstash Redis
+- **Email:** Nodemailer SMTP
 - **Validation:** Zod
 - **Language:** TypeScript
 
@@ -14,234 +13,244 @@
 
 ### Database Schema (Prisma)
 ```prisma
-// Ana Modeller:
-- User (kullanıcı bilgileri)
-- Profile (kullanıcı profil detayları)  
-- Organization (organizasyonlar)
-- Membership (kullanıcı-organizasyon ilişkisi + roller)
-- AuditLog (audit tracking)
-- NextAuth tabloları (Account, Session, VerificationToken)
+// CMS Modelleri:
+- ContactForm (iletişim formu gönderimler)
+- Content (sayfa içerikleri - çok dilli)
+- Media (dosya yükleme sistemi)
+- SystemLog (sistem logları)
 ```
 
 ### API Endpoints Yapısı
 ```
 /api/
-├── auth/
-│   └── signup/          # Kullanıcı kaydı
-├── users/
-│   └── [id]/            # Kullanıcı CRUD işlemleri
-├── orgs/
-│   ├── route.ts         # Organizasyon listesi/oluşturma
-│   └── members/
-│       ├── invite/      # Üye davet etme
-│       └── [userId]/
-│           ├── route.ts # Üye silme
-│           └── role/    # Rol güncelleme
+├── contact/             # İletişim formu (POST, GET)
+├── content/             # İçerik yönetimi (GET, POST, PUT, DELETE)
+├── media/               # Dosya yükleme (GET, POST, DELETE)
+├── admin/               # Admin dashboard (istatistikler, loglar)
 └── health/              # Sistem durumu kontrolü
 ```
 
-## 🔧 Uygulanan İyileştirmeler
+## 🎯 Site Yapısı
 
-### 1. Rate Limiting Sistemi
-- **Auth endpoints:** 3 istek/dakika
-- **Genel API:** 10 istek/dakika
-- **Kritik işlemler:** 1 istek/dakika
+### İçerik Yönetimi
+- Çok dilli destek (TR/EN)
+- Dinamik sayfa içerikleri
+- SEO dostu yapı
 
-### 2. Input Validation (Zod)
-- Email/password validasyonu
-- Role validation
-- Organization name validation
-- Comprehensive error messaging
+## 🔧 Sistem Özellikleri
 
-### 3. Security Middleware
-- JWT token kontrolü
-- Security headers (OWASP standards)
-- Protected route management
-- CORS configuration
+### 1. İletişim Formu Sistemi
+- Form gönderimi ve database'e kayıt
+- Admin'e email bildirimi
+- Müşteriye otomatik yanıt
+- Status takibi (NEW, REVIEWED, RESPONDED, CLOSED)
 
-### 4. Error Handling
-- Prisma error handling
-- Validation error formatting
-- Rate limit responses
-- Comprehensive logging
+### 2. İçerik Yönetimi
+- Key-based content system
+- Multi-language support
+- CRUD operations via API
+- Content versioning
 
-### 5. Audit Logging
-- Tüm kritik işlemlerde audit tracking
-- IP/User Agent capture
-- Before/after state logging
-- Organization-scoped audit logs
+### 3. Medya Yönetimi
+- Güvenli dosya yükleme
+- Image ve document desteği
+- File validation ve size limits
+- Otomatik kategorileme
+
+### 4. Admin Dashboard
+- İstatistiksel raporlar
+- İletişim formu yönetimi
+- Sistem log takibi
+- Media library yönetimi
 
 ## 📁 Dosya Yapısı
 
 ```
-auroco-backend/
+auroco-cms/
 ├── app/
-│   ├── api/              # API routes
-│   ├── globals.css
-│   ├── layout.tsx
-│   └── page.tsx
+│   ├── api/              # API endpoints
+│   │   ├── admin/        # Admin dashboard
+│   │   ├── contact/      # İletişim formu
+│   │   ├── content/      # İçerik yönetimi
+│   │   ├── health/       # Health check
+│   │   └── media/        # Dosya yükleme
+│   ├── globals.css       # Global styles
+│   ├── layout.tsx        # Root layout
+│   └── page.tsx          # Ana sayfa
 ├── lib/
-│   ├── auth.ts          # NextAuth configuration
-│   ├── authz.ts         # Authorization helpers
-│   ├── audit.ts         # Audit logging system
-│   ├── prisma.ts        # Database client
-│   ├── ratelimit.ts     # Rate limiting setup
-│   └── validations.ts   # Zod schemas
+│   ├── email.ts          # Email servisi
+│   ├── prisma.ts         # Database client
+│   ├── upload.ts         # File upload logic
+│   └── validations.ts    # Zod schemas
 ├── prisma/
-│   ├── schema.prisma    # Database schema
-│   ├── migrations/      # Database migrations
-│   └── seed.ts          # Seed data
-├── middleware.ts        # Global middleware
-├── next.config.ts       # Next.js configuration
-├── package.json
-└── .env.example         # Environment variables template
+│   └── schema.prisma     # Database schema
+├── public/
+│   └── uploads/          # Yüklenen dosyalar
+├── middleware.ts         # Security middleware
+├── next.config.ts        # Next.js config
+└── package.json          # Dependencies
 ```
 
 ## 🔒 Güvenlik Özellikleri
 
-### Authentication & Authorization
-- JWT-based authentication
-- Multi-tenant organization system
-- Role-based access control (OWNER/ADMIN/MEMBER)
-- Owner protection (son owner silinmeyi önleme)
-- Self-modification protection
-
-### Security Headers
-- X-Content-Type-Options: nosniff
-- X-Frame-Options: DENY
-- X-XSS-Protection: 1; mode=block
-- Referrer-Policy: strict-origin-when-cross-origin
-- HSTS (production'da)
-
 ### Input Security
 - SQL injection koruması (Prisma ORM)
 - XSS koruması (input validation)
-- Rate limiting (DDoS koruması)
-- Password hashing (bcrypt, 12 rounds)
+- File upload güvenliği
+- MIME type validation
 
-## 🚀 Production Hazırlığı
+### Security Headers
+- X-Content-Type-Options: nosniff
+- X-Frame-Options: SAMEORIGIN (3D modeller için)
+- X-XSS-Protection: 1; mode=block
+- Referrer-Policy: strict-origin-when-cross-origin
+
+### Admin Protection
+- IP-based access control (production)
+- Development ortamında bypass
+- Protected admin endpoints
+
+## 🚀 Kurulum ve Çalıştırma
 
 ### Environment Variables
 ```env
-DATABASE_URL="postgresql://USER:PASSWORD@HOST:PORT/DBNAME?sslmode=require"
+DATABASE_URL="postgresql://user:pass@host:5432/dbname"
 PRISMA_CLIENT_ENGINE_TYPE="binary"
-NEXTAUTH_SECRET="replace_with_a_long_random_string"
-NEXTAUTH_URL="http://localhost:3000"
-UPSTASH_REDIS_REST_URL="https://famous-cicada-******"
-UPSTASH_REDIS_REST_TOKEN="*******************"
+SMTP_HOST="smtp.gmail.com"
+SMTP_PORT="587"
+SMTP_USER="your-email@gmail.com"
+SMTP_PASS="your-app-password"
+ADMIN_EMAIL="admin@auroco.com"
+ADMIN_IPS="192.168.1.1,10.0.0.1" # Production için
 ```
 
-### Performance Optimizations
-- Database connection pooling
-- Proper indexing strategy
-- Server components external packages
-- Image optimization settings
-- Compression enabled
+### Çalıştırma
+```bash
+# Dependencies yükle
+npm install
 
-### Monitoring & Health Checks
-- `/api/health` endpoint
-- Database connectivity check
-- Redis connectivity check
-- Comprehensive error logging
+# Database setup
+npx prisma db push
 
-## 🧪 Test Edilmesi Gereken Alanlar
+# Development server
+npm run dev
 
-### Authentication Flow
-- [x] Kullanıcı kaydı
-- [x] Giriş yapma
-- [x] Session management
-- [x] JWT token validation
+# Production build
+npm run build
+npm start
+```
 
-### Authorization System
-- [x] Role-based access
-- [x] Organization switching
-- [x] Owner protection
-- [x] Self-modification prevention
+## 📊 API Kullanımı
 
-### Member Management
-- [x] Üye davet etme
-- [x] Rol değiştirme  
-- [x] Üye silme
-- [x] Duplicate invite protection
+### İletişim Formu
+```javascript
+// POST /api/contact
+{
+  "name": "John Doe",
+  "email": "john@example.com",
+  "service": "Akademi",
+  "message": "Eğitim programları hakkında bilgi istiyorum"
+}
+```
 
-### Rate Limiting
-- [x] Auth endpoints (3/min)
-- [x] API endpoints (10/min)
-- [x] Error responses
-- [x] Header information
+### İçerik Yönetimi
+```javascript
+// GET /api/content?key=homepage_hero_title&locale=tr
+// POST /api/content
+{
+  "key": "about_title",
+  "title": "Hakkımızda Başlık",
+  "content": "Şirket hakkında bilgiler...",
+  "locale": "tr"
+}
+```
 
-### Security
-- [x] Middleware protection
-- [x] Input validation
-- [x] Error handling
-- [x] Audit logging
+### Dosya Yükleme
+```javascript
+// POST /api/media
+FormData: {
+  file: [File],
+  category: "logo",
+  alt: "Company logo"
+}
+```
 
-## 📈 Performans Metrikleri
+## 📈 Performans Özellikleri
 
-### Database
-- **Connection pooling:** Prisma default
-- **Query optimization:** Select specific fields
-- **Indexing:** User email, membership relations
-- **Transaction usage:** Multi-step operations
+### Database Optimizations
+- Optimized indexing strategy
+- Efficient query patterns
+- Connection pooling
 
-### API Response Times
-- **Authentication:** ~200ms
-- **Organization listing:** ~150ms
-- **Member operations:** ~300ms
-- **Audit logging:** ~100ms (async)
+### File Management
+- Organized upload directories
+- File size validation
+- MIME type restrictions
 
-## 🔄 Gelecek Geliştirmeler
+### Caching Strategy
+- Static asset optimization
+- Image optimization (WebP, AVIF)
+- Server-side rendering
 
-### Kısa Vadeli
-- [ ] Unit test coverage (Jest)
-- [ ] API documentation (Swagger)
-- [ ] Email notification system
-- [ ] File upload functionality
+## 🧪 Test Endpoints
 
-### Orta Vadeli  
-- [ ] WebSocket real-time updates
-- [ ] Advanced audit filtering
-- [ ] Bulk operations
-- [ ] Export/import functionality
+```bash
+# Health check
+curl http://localhost:3000/api/health
 
-### Uzun Vadeli
-- [ ] Microservices migration
-- [ ] Advanced analytics
-- [ ] Machine learning integration
-- [ ] Multi-region deployment
+# Contact form
+curl -X POST http://localhost:3000/api/contact \
+  -H "Content-Type: application/json" \
+  -d '{"name":"Test","email":"test@test.com","service":"Akademi","message":"Test mesajı"}'
 
-## 🎯 Kalite Değerlendirmesi
+# Content API
+curl http://localhost:3000/api/content?locale=tr
+```
 
-**Genel Backend Kalitesi: 9.5/10**
+## 🔄 Maintenance
 
-### Güçlü Yanlar
-- Comprehensive multi-tenant architecture
-- Excellent security implementation
-- Professional error handling
-- Complete audit trail system
-- Type-safe development
-- Production-ready configuration
+### Log Monitoring
+- System logs via /api/admin?action=system-logs
+- Email delivery tracking
+- File upload logs
 
-### İyileştirme Alanları
-- Unit test coverage
-- API documentation
-- Performance monitoring
-- Error tracking (Sentry)
+### Content Updates
+- Dynamic content via CMS API
+- Multi-language content support
+- Version control ready
 
-## 📞 Geliştirme Notları
+### Backup Strategy
+- Database regular backups
+- Uploaded files backup
+- Configuration backup
 
-Bu backend sistemi, modern web uygulamalarının gerektirdiği tüm temel özellikleri içermektedir:
+## 🎯 Production Readiness
 
-1. **Scalability:** Multi-tenant mimari ile ölçeklenebilir
-2. **Security:** Enterprise-level güvenlik önlemleri
-3. **Maintainability:** TypeScript ve clean architecture
-4. **Performance:** Optimized database queries ve caching
-5. **Monitoring:** Comprehensive logging ve health checks
+**System Status: Production Ready ✅**
 
-AI yardımıyla oluşturulan bu sistem, profesyonel düzeyde kod kalitesi ve best practices uygulamasına sahiptir.
+### Deployed Features
+- Secure file upload system
+- Email notification system
+- Admin dashboard
+- Content management
+- Health monitoring
+
+### Security Checklist
+- ✅ Input validation
+- ✅ SQL injection protection
+- ✅ XSS protection
+- ✅ File upload security
+- ✅ Admin access control
+
+### Performance Checklist
+- ✅ Database indexing
+- ✅ Image optimization
+- ✅ Gzip compression
+- ✅ Static asset optimization
 
 ---
 
+**Site Tipi:** Kurumsal CMS + 3D Interactive  
 **Son Güncelleme:** Ocak 2025  
 **Versiyon:** 1.0.0  
-**Durum:** Production Ready ✅
+**Durum:** Production Ready# auroco-backend

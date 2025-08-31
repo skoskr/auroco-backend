@@ -6,17 +6,12 @@ export async function GET() {
   try {
     // Database health check
     await prisma.$queryRaw`SELECT 1`;
-    
-    // Redis health check (opsiyonel)
-    // const redis = new Redis({ ... });
-    // await redis.ping();
 
     return NextResponse.json({
       status: "healthy",
       timestamp: new Date().toISOString(),
       services: {
-        database: "connected",
-        redis: "connected" // Redis kontrol ederseniz
+        database: "connected"
       }
     });
 
