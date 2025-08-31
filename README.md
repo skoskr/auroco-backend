@@ -115,13 +115,11 @@ auroco-cms/
 ### Environment Variables
 ```env
 DATABASE_URL="postgresql://user:pass@host:5432/dbname"
-PRISMA_CLIENT_ENGINE_TYPE="binary"
-SMTP_HOST="smtp.gmail.com"
+SMTP_HOST="your-smtp-host"
 SMTP_PORT="587"
-SMTP_USER="your-email@gmail.com"
-SMTP_PASS="your-app-password"
-ADMIN_EMAIL="admin@auroco.com"
-ADMIN_IPS="192.168.1.1,10.0.0.1" # Production için
+SMTP_USER="your-email"
+SMTP_PASS="your-password"
+ADMIN_EMAIL="your-admin@email.com"
 ```
 
 ### Çalıştırma
