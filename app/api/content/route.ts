@@ -145,13 +145,16 @@ export async function PUT(req: NextRequest) {
     }
 
     // Partial validation (sadece gönderilen alanları kontrol et)
-    const allowedFields = ['title', 'content', 'isActive'];
-    const updateData: any = {};
+    const updateData: { title?: string; content?: string; isActive?: boolean } = {};
     
-    for (const field of allowedFields) {
-      if (field in body) {
-        updateData[field] = body[field];
-      }
+    if ('title' in body && typeof body.title === 'string') {
+      updateData.title = body.title;
+    }
+    if ('content' in body && typeof body.content === 'string') {
+      updateData.content = body.content;
+    }
+    if ('isActive' in body && typeof body.isActive === 'boolean') {
+      updateData.isActive = body.isActive;
     }
 
     if (Object.keys(updateData).length === 0) {

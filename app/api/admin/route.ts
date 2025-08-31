@@ -160,7 +160,7 @@ async function getRecentContacts(limit: number) {
 
 // Sistem logları
 async function getSystemLogs(limit: number, level?: string | null) {
-  const where: any = {};
+  const where: { level?: string } = {};
   if (level) where.level = level;
 
   const logs = await prisma.systemLog.findMany({

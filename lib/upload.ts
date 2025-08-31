@@ -174,18 +174,22 @@ export async function uploadFile(fileData: FileData, category?: string): Promise
 }
 
 // FormData'dan file parse etme
-export function parseFileFromFormData(formData: FormData, fieldName: string = 'file'): FileData | null {
+export async function parseFileFromFormData(formData: FormData, fieldName: string = 'file'): Promise<FileData | null> {
   const file = formData.get(fieldName) as File;
   
   if (!file || !(file instanceof File)) {
     return null;
   }
 
+  // File'ı buffer'a dönüştür
+  const arrayBuffer = await file.arrayBuffer();
+  const buffer = Buffer.from(arrayBuffer);
+
   return {
     name: file.name,
     type: file.type,
     size: file.size,
-    buffer: Buffer.from(file.stream() as any) // Bu kısım runtime'da düzeltilecek
+    buffer: buffer
   };
 }
 
